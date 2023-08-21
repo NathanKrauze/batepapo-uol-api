@@ -110,7 +110,7 @@ app.get('/messages', async (req, res) => {
     let msgToSend = [];
 
     try{
-        const messages = await db.collection('messages').find({$or: [{to: 'todos'}, {to: user}, {from: user}]}).toArray();
+        const messages = await db.collection('messages').find({$or: [{to: 'todos'}, {to: user}, {from: user}, {type: "message"}]}).toArray();
         msgToSend = messages.slice(messages.length - limit)
         res.send(msgToSend);    
     } catch (err) {
