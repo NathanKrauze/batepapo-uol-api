@@ -136,4 +136,29 @@ app.post('/status', async (req, res) => {
     }
 });
 
+async function removeInactivity (){
+    const lastSeconds = Date.now() - 10000;
+    let lastMessages = []
+
+    try{
+        const inactives = await db.collection('participants').find({lastStatus: {$lte: lastSeconds}}).toArray() 
+        if(inactives.length <= 0 ) return;
+        inactives.map(async (inactive) => {
+            lastMessages.push({
+               from: inactive.name,
+               to: "todos", 
+               text: "sai da sala...",
+               type: "status",
+               time: dayjs().format('HH:mm:ss')
+            })
+            await db.collection('participants').deleteOne(inactive)
+        })
+        await db.collection('messages').insertMany(lastMessages);
+    } catch (err){
+        console.log(err.message);
+    }
+}
+
+setInterval(removeInactivity, 15000);
+
 app.listen(5000, console.log('Runing on server port 5000'));
