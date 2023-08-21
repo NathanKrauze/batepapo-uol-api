@@ -82,7 +82,7 @@ app.post('/messages', async (req, res) => {
     const user = req.headers.user;
 
     const msgToValidate = {from: user, to, text, type};
-    let msgToSend = {};
+    let msgToInsert = {};
 
     const validation = messageSchema.validate(msgToValidate, {abortEarly: false});
     if (validation.error) return res.sendStatus(422);
@@ -91,8 +91,8 @@ app.post('/messages', async (req, res) => {
         const existParticipant = await db.collection('participants').findOne({name: user});
         if (!existParticipant) return res.sendStatus(422);
 
-        msgToSend = {...msgToValidate, time: dayjs().format('HH:mm:ss')};
-        await db.collection('messages').insertOne(msgToSend);
+        msgToInsert = {...msgToValidate, time: dayjs().format('HH:mm:ss')};
+        await db.collection('messages').insertOne(msgToInsert);
         return res.sendStatus(201);
     } catch (err) {
         res.status(500).send(err.message);
@@ -100,7 +100,19 @@ app.post('/messages', async (req, res) => {
 });
 
 app.get('/messages', async (req, res) => {
-    res.send('OK get msg');
+    const user = req.headers.user;
+    const limit = parseInt(req.query.limit);
+    if(limit === NaN || limit <= 0) return res.sendStatus(422);
+
+    let msgToSend = [];
+
+    try{
+        const messages = await db.collection('messages').find({$or: [{to: 'todos'}, {to: user}, {from: user}]}).toArray();
+        msgToSend = messages.slice(messages.length - limit)
+        res.send(msgToSend);    
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
 
 app.post('/status', async (req, res) => {
