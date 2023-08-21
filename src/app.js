@@ -119,7 +119,21 @@ app.get('/messages', async (req, res) => {
 });
 
 app.post('/status', async (req, res) => {
-    res.send('OK post stt');
+    const user = req.headers.user;
+    if(!user) return res.sendStatus(404);
+    const name= user;
+    const lastStatus= Date.now();
+
+    try{
+        const existParticipant = await db.collection('participants').findOne({name: user});
+        if (!existParticipant) return res.sendStatus(404);
+
+        const add = await db.collection('participants').updateOne({name: user}, {$set: {name, lastStatus}});
+        console.log(add)
+        res.sendStatus(200);
+    } catch (err){
+        res.status(500).send(err.message);
+    }
 });
 
 app.listen(5000, console.log('Runing on server port 5000'));
