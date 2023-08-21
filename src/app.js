@@ -101,8 +101,11 @@ app.post('/messages', async (req, res) => {
 
 app.get('/messages', async (req, res) => {
     const user = req.headers.user;
-    const limit = parseInt(req.query.limit);
-    if(limit === NaN || limit <= 0) return res.sendStatus(422);
+    const limit = req.query.limit;
+    if(limit !== undefined){
+        parseInt(limit)
+        if(isNaN(limit) || limit <=0) return res.sendStatus(422);
+    }
 
     let msgToSend = [];
 
